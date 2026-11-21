@@ -171,7 +171,7 @@ a.onclick=go;a.onkeydown=e=>{if(e.key==='Enter')go();};
 });
 // koneksi ke server (aurion.js di VPS)
 // TEMPEL ALAMAT SERVER DI SINI (contoh: "wss://domainmu.com/aurion"), lalu simpan file
-const DEFAULT_WS="";
+const DEFAULT_WS="ws://IP_VPS:8080";
 try{$('ws').value=localStorage.getItem('ws')||DEFAULT_WS;}catch(e){$
 try{$('ws').value=localStorage.getItem('ws')||DEFAULT_WS;}catch(e){$
 ('ws').value=DEFAULT_WS;}
