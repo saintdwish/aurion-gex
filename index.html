@@ -1,3 +1,4 @@
+isididi
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -46,6 +47,11 @@ radius:50%;background:#4a5362;margin-right:8px}
 input{background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--tx);border
 radius:11px;padding:9px 11px;width:min(340px,100%);font-size:13px}
 input:focus-visible,.nav a:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.conn{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button{background:rgba(255,255,255,.08);color:#fff;border:1px solid var(--line);border
+radius:11px;padding:9px 14px;font-size:13px;cursor:pointer;box-shadow:0 0 14px 
+rgba(255,255,255,.15)}
+button:active{background:rgba(255,255,255,.16)}
 .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(270px,1fr))}
 .card{padding:16px;border-radius:20px;background:rgba(255,255,255,.045);backdrop
 filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--line);box
@@ -98,11 +104,13 @@ width="7" height="5" rx="1.5"/></svg><span>Dashboard</span></a>
   <div class="top">
     <div><h1>Dashboard</h1><div class="st"><i class="dot" id="dot"></i><span 
 id="stt">Offline</span> · XAUUSDT Binance Futures</div></div>
-<input id="ws" placeholder="Alamat server (wss://domainmu.com/aurion)" aria
-label="Alamat server">
+<div class="conn"><input id="ws" placeholder="Tempel alamat server (wss://...)" aria
+label="Alamat server" inputmode="url" enterkeyhint="go" autocapitalize="off" 
+autocorrect="off" spellcheck="false"><button id="go" type="button">Hubungkan</
+button></div>
   </div>
   <div class="grid">
-<div class="card wide"><h3>Ringkasan</h3><div class="sum" id="sum">Menunggu data 
+    <div class="card wide"><h3>Ringkasan</h3><div class="sum" id="sum">Menunggu data 
 dari server…</div></div>
     <div class="card"><h3>Harga</h3>
       <div class="big" id="mid">–</div>
@@ -135,11 +143,11 @@ ada</span></div>
       <div class="row"><span class="mut">VAL</span><span id="val">–</span></div>
       <div class="row"><span class="mut">Total volume</span><span id="tv">–</span></
 div>
+div>
     </div>
-    <div class="card"><h3>Dinding order terbesar</h3>
+<div class="card"><h3>Dinding order terbesar</h3>
       <div class="row"><span class="up">Bid</span><span id="wb">–</span></div>
       <div class="row"><span class="dn">Ask</span><span id="wa">–</span></div>
-      <h3 style="margin-top:14px">Absorpsi terakhir</h3>
 <h3 style="margin-top:14px">Absorpsi terakhir</h3>
 <div class="sum" id="abs" style="font-size:13px">Belum ada</div>
     </div>
@@ -168,47 +176,49 @@ const go=()=>{document.querySelectorAll('.nav
 a').forEach(x=>x.classList.toggle('on',x===a));
 document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id===a.dataset.v));};
 a.onclick=go;a.onkeydown=e=>{if(e.key==='Enter')go();};
+a.onclick=go;a.onkeydown=e=>{if(e.key==='Enter')go();};
 });
 // koneksi ke server (aurion.js di VPS)
 // TEMPEL ALAMAT SERVER DI SINI (contoh: "wss://domainmu.com/aurion"), lalu simpan file
-const DEFAULT_WS="wss://significant-constructed-spyware-discounted.trycloudflare.com";
-try{$('ws').value=localStorage.getItem('ws')||DEFAULT_WS;}catch(e){$
+const DEFAULT_WS="";
 try{$('ws').value=localStorage.getItem('ws')||DEFAULT_WS;}catch(e){$
 ('ws').value=DEFAULT_WS;}
 if(!$('ws').value)$('stt').textContent='Isi alamat server';
-$('ws').onchange=connect;
+$('ws').onchange=connect;$('go').onclick=connect;$
+('ws').onkeydown=e=>{if(e.key==='Enter')connect();};
 function setOn(o){$('dot').classList.toggle('on',o);$('stt').textContent=o?'Sistem 
 online':'Offline';}
 function connect(){
-  const u=$('ws').value.trim();if(!u)return;
-  try{localStorage.setItem('ws',u);}catch(e){}
-  clearTimeout(rt);if(ws){ws.onclose=null;ws.close();}
-  ws=new WebSocket(u);
-  ws.onopen=()=>setOn(true);
-  ws.onclose=()=>{setOn(false);rt=setTimeout(connect,3000);};
-  ws.onmessage=e=>{
-    const m=JSON.parse(e.data);
-    if(m.type==='trade'){if(m.qty>=thr)
+let u=$('ws').value.trim().replace(/^https:/,'wss:').replace(/^http:/,'ws:');if(!u)return;
+$('ws').value=u;$('ws').blur();$('stt').textContent='Menghubungkan…';
+try{localStorage.setItem('ws',u);}catch(e){}
+clearTimeout(rt);if(ws){ws.onclose=null;ws.close();}
+ws=new WebSocket(u);
+ws.onopen=()=>setOn(true);
+ws.onclose=()=>{setOn(false);rt=setTimeout(connect,3000);};
+ws.onmessage=e=>{
+const m=JSON.parse(e.data);
+if(m.type==='trade'){if(m.qty>=thr)
 {bigs.unshift(m);if(bigs.length>10)bigs.pop();drawBig();}}
-    else if(m.type==='abs'){lastAbs=m;drawAbs();summary();}
-    else if(m.type==='fp'){$('fp').innerHTML=`<span class="${m.side==='buy'?'up':'dn'}">$
+else if(m.type==='abs'){lastAbs=m;drawAbs();summary();}
+else if(m.type==='fp'){$('fp').innerHTML=`<span class="${m.side==='buy'?'up':'dn'}">$
 {m.side==='buy'?'Buy':'Sell'} ${f(m.ratio,1)}:1</span> di ${f(m.price)} (${tm(m.t)})`;}
-    else if(m.type==='stats'){st=m;offset=m.offset;stale=m.stale;thr=m.bigThr==null?
+else if(m.type==='stats'){st=m;offset=m.offset;stale=m.stale;thr=m.bigThr==null?
 Infinity:m.bigThr;drawStats();}
-    else if(m.mid!==undefined){bk=m;drawBook();}
+else if(m.mid!==undefined){bk=m;drawBook();}
   };
 }
 function drawBook(){
-  $('mid').textContent=f(bk.mid);
-  $('ba').textContent=`${f(bk.bid)} / ${f(bk.ask)}`;
-  $('brk').textContent=cv(bk.mid);
-  const up=(1+bk.imbalance)/2*100;
-  $('bu').style.width=up+'%';$('bd').style.width=(100-up)+'%';
-  $('imb').innerHTML=`<span class="${bk.imbalance>=0?'up':'dn'}">$
+$('mid').textContent=f(bk.mid);
+$('ba').textContent=`${f(bk.bid)} / ${f(bk.ask)}`;
+$('brk').textContent=cv(bk.mid);
+const up=(1+bk.imbalance)/2*100;
+$('bu').style.width=up+'%';$('bd').style.width=(100-up)+'%';
+$('imb').innerHTML=`<span class="${bk.imbalance>=0?'up':'dn'}">$
 {bk.imbalance>=0?'Bid':'Ask'} dominan ${f(Math.abs(bk.imbalance)*100,1)}%</span>`;
-  $('sb').textContent=`${f(bk.sumBid,1)} / ${f(bk.sumAsk,1)}`;
-  $('wb').textContent=`${f(bk.wallBid[1],1)} @ ${f(bk.wallBid[0])} (≈${cv(bk.wallBid[0])})`;
-  $('wa').textContent=`${f(bk.wallAsk[1],1)} @ ${f(bk.wallAsk[0])} (≈${cv(bk.wallAsk[0])})`;
+$('sb').textContent=`${f(bk.sumBid,1)} / ${f(bk.sumAsk,1)}`;
+$('wb').textContent=`${f(bk.wallBid[1],1)} @ ${f(bk.wallBid[0])} (≈${cv(bk.wallBid[0])})`;
+$('wa').textContent=`${f(bk.wallAsk[1],1)} @ ${f(bk.wallAsk[0])} (≈${cv(bk.wallAsk[0])})`;
   const 
 b=bk.bids.slice(0,10),a=bk.asks.slice(0,10),mx=Math.max(...b.map(r=>r[1]),...a.map(r=>r[1]
 ));
@@ -248,8 +258,8 @@ if(Math.abs(bk.imbalance)>=0.3)p.push(bk.imbalance>0?'Order book condong ke
 bid.':'Order book condong ke ask.');
 if(lastAbs&&Date.now()-lastAbs.t<180000)p.push(lastAbs.side==='bid'?'Ada absorpsi bid: 
 sell diserap, harga tertahan.':'Ada absorpsi ask: buy diserap, harga tertahan.');
-}
 $('sum').textContent=p.join(' ');
+}
 connect();
 </script>
 </body>
